@@ -71,7 +71,23 @@ public class LoginApplication {
         String password = scanner.nextLine();
 
         System.out.print("Enter user ID: ");
-        int id = Integer.parseInt(scanner.nextLine());
+
+        String idInput = scanner.nextLine();
+
+        int id;
+
+        try {
+
+            id = Integer.parseInt(idInput);
+
+        } catch (NumberFormatException e) {
+
+            System.out.println(
+                    "Invalid user ID. Please enter a number."
+            );
+
+            return;
+        }
 
         try {
 
@@ -92,6 +108,7 @@ public class LoginApplication {
                             + e.getMessage()
             );
         }
+
     }
 
     private static void loginUser(
