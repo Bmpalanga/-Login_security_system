@@ -2,6 +2,7 @@
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/database/DatabaseInitializer.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/database/DatabaseManager.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/model/User.java
+/home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/repository/SecurityLogRepository.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/repository/UserRepository.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/service/AuthService.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/service/PasswordService.java
