@@ -3,6 +3,7 @@ package com.cybersecurity;
 import com.cybersecurity.database.DatabaseInitializer;
 import com.cybersecurity.database.DatabaseManager;
 import com.cybersecurity.repository.SecurityLogRepository;
+import com.cybersecurity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +24,15 @@ public class SecurityLogRepositoryTest {
 
         DatabaseInitializer.initializeDatabase();
 
+        UserRepository userRepository =
+                new UserRepository();
+
+        userRepository.deleteAll();
+
         securityLogRepository =
                 new SecurityLogRepository();
+
+        securityLogRepository.deleteAll();
     }
 
     @Test

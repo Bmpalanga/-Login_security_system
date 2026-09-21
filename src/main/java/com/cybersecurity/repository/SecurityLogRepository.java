@@ -68,4 +68,19 @@ public class SecurityLogRepository {
 
         return logs;
     }
+    public void deleteAll() {
+
+        String sql = "DELETE FROM security_logs";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("Could not delete security logs.");
+            e.printStackTrace();
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package com.cybersecurity;
 
 import com.cybersecurity.database.DatabaseInitializer;
+import com.cybersecurity.database.DatabaseManager;
 import com.cybersecurity.model.User;
 import com.cybersecurity.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,29 +17,37 @@ public class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
+
+        DatabaseManager.setDatabaseUrl(
+                "jdbc:sqlite:login_security_test.db"
+        );
+
         DatabaseInitializer.initializeDatabase();
+
         userRepository = new UserRepository();
+
+        userRepository.deleteAll();
     }
 
     @Test
     void shouldFindUserByUsername() {
 
         User user = new User(
-                200,
-                "repositoryUser",
+                1,
+                "testUser",
                 "hashedPassword"
         );
 
         userRepository.save(user);
 
-        Optional<User> result =
-                userRepository.findByUsername("repositoryUser");
+        Optional<User> foundUser =
+                userRepository.findByUsername("testUser");
 
-        assertTrue(result.isPresent());
+        assertTrue(foundUser.isPresent());
 
         assertEquals(
-                "repositoryUser",
-                result.get().getUsername()
+                "testUser",
+                foundUser.get().getUsername()
         );
     }
 }
