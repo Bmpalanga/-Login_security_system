@@ -1,5 +1,4 @@
 package com.cybersecurity.model;
-import java.time.LocalDateTime;
 
 public class User {
 
@@ -8,7 +7,6 @@ public class User {
     private String passwordHash;
     private int failedAttempts;
     private boolean locked;
-    private LocalDateTime createdAt;
 
     public User(int id, String username, String passwordHash) {
         this.id = id;
@@ -16,18 +14,37 @@ public class User {
         this.passwordHash = passwordHash;
         this.failedAttempts = 0;
         this.locked = false;
-        this.createdAt = LocalDateTime.now();
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public boolean isLocked() {
-        return locked;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     public int getFailedAttempts() {
         return failedAttempts;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void incrementFailedAttempts() {
+        failedAttempts++;
+    }
+
+    public void resetFailedAttempts() {
+        failedAttempts = 0;
+    }
+
+    public void lockAccount() {
+        locked = true;
     }
 }
