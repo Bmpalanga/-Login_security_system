@@ -2,6 +2,7 @@ package com.cybersecurity;
 
 import com.cybersecurity.database.DatabaseInitializer;
 import com.cybersecurity.database.DatabaseManager;
+import com.cybersecurity.model.User;
 import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,5 +101,83 @@ public class LoginTest {
                         "Password123!"
                 )
         );
+    }
+    @Test
+    void shouldLockAccountAfterThreeFailedLoginAttempts() {
+
+        authService.registerUser(
+                10,
+                "lockUser",
+                "Password123!"
+        );
+
+        assertFalse(
+                authService.login(
+                        "lockUser",
+                        "WrongPassword1!"
+                )
+        );
+
+        assertFalse(
+                authService.login(
+                        "lockUser",
+                        "WrongPassword2!"
+                )
+        );
+
+        assertFalse(
+                authService.login(
+                        "lockUser",
+                        "WrongPassword3!"
+                )
+        );
+
+        UserRepository userRepository =
+                new UserRepository();
+
+        User user = userRepository
+                .findByUsername("lockUser")
+                .orElseThrow();
+
+        assertEquals(
+                3,
+                user.getFailedAttempts()
+        );
+
+        assertTrue(
+                user.isLocked()
+        );
+    }
+    @Test
+    void shouldNotAllowLoginAfterAccountIsLocked() {
+
+        authService.registerUser(
+                11,
+                "lockedUser",
+                "Password123!"
+        );
+
+        authService.login(
+                "lockedUser",
+                "WrongPassword1!"
+        );
+
+        authService.login(
+                "lockedUser",
+                "WrongPassword2!"
+        );
+
+        authService.login(
+                "lockedUser",
+                "WrongPassword3!"
+        );
+
+        boolean loginResult =
+                authService.login(
+                        "lockedUser",
+                        "Password123!"
+                );
+
+        assertFalse(loginResult);
     }
 }
