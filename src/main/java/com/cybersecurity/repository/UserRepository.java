@@ -76,4 +76,42 @@ public class UserRepository {
 
         return Optional.empty();
     }
+    public void updateSecurityStatus(User user) {
+
+        String sql = """
+            UPDATE users
+            SET failed_attempts = ?,
+                locked = ?
+            WHERE username = ?
+            """;
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, user.getFailedAttempts());
+            statement.setInt(2, user.isLocked() ? 1 : 0);
+            statement.setString(3, user.getUsername());
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("Could not update user security status.");
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteAll() {
+
+        String sql = "DELETE FROM users";
+
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+            System.out.println("Could not delete users.");
+            e.printStackTrace();
+        }
+    }
 }

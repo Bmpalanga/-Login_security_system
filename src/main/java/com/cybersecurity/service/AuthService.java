@@ -47,7 +47,7 @@ public class AuthService {
             return false;
         }
 
-        // Account is locked
+        // Account is already locked
         if (user.isLocked()) {
             return false;
         }
@@ -64,6 +64,9 @@ public class AuthService {
             // Successful login
             user.resetFailedAttempts();
 
+            // Save reset to database
+            userRepository.updateSecurityStatus(user);
+
             return true;
         }
 
@@ -74,6 +77,9 @@ public class AuthService {
         if (user.getFailedAttempts() >= 3) {
             user.lockAccount();
         }
+
+        // Save failed attempts and lock status
+        userRepository.updateSecurityStatus(user);
 
         return false;
     }

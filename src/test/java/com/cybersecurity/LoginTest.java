@@ -1,6 +1,7 @@
 package com.cybersecurity;
 
 import com.cybersecurity.database.DatabaseInitializer;
+import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,10 @@ public class LoginTest {
     @BeforeEach
     void setUp() {
         DatabaseInitializer.initializeDatabase();
+
+        UserRepository userRepository = new UserRepository();
+        userRepository.deleteAll();
+
         authService = new AuthService();
     }
 
@@ -33,6 +38,7 @@ public class LoginTest {
 
         assertTrue(result);
     }
+
     @Test
     void wrongPasswordShouldRejectLogin() {
 
@@ -49,6 +55,7 @@ public class LoginTest {
 
         assertFalse(result);
     }
+
     @Test
     void accountShouldLockAfterThreeFailedAttempts() {
 
@@ -79,8 +86,6 @@ public class LoginTest {
                 )
         );
 
-        // Correct password should now fail
-        // because the account is locked.
         assertFalse(
                 authService.login(
                         "lockedUser",
