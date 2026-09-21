@@ -23,7 +23,7 @@ public class AuthServiceDatabaseTest {
         User user = authService.registerUser(
                 100,
                 "testuser",
-                "MyPassword123"
+                "MyPassword123!"
         );
 
         assertNotNull(user);
@@ -32,7 +32,7 @@ public class AuthServiceDatabaseTest {
         assertNotNull(user.getPasswordHash());
 
         assertNotEquals(
-                "MyPassword123",
+                "MyPassword123!",
                 user.getPasswordHash()
         );
     }
@@ -44,7 +44,7 @@ public class AuthServiceDatabaseTest {
         authService.registerUser(
                 300,
                 "uniqueUser",
-                "Password123"
+                "Password123!"
         );
 
         assertThrows(
@@ -52,7 +52,7 @@ public class AuthServiceDatabaseTest {
                 () -> authService.registerUser(
                         301,
                         "uniqueUser",
-                        "AnotherPassword123"
+                        "AnotherPassword123!"
                 )
         );
     }

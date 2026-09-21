@@ -28,12 +28,12 @@ public class LoginTest {
         authService.registerUser(
                 400,
                 "loginUser",
-                "Password123"
+                "Password123!"
         );
 
         boolean result = authService.login(
                 "loginUser",
-                "Password123"
+                "Password123!"
         );
 
         assertTrue(result);
@@ -45,7 +45,7 @@ public class LoginTest {
         authService.registerUser(
                 401,
                 "wrongPasswordUser",
-                "Password123"
+                "Password123!"
         );
 
         boolean result = authService.login(
@@ -62,7 +62,7 @@ public class LoginTest {
         authService.registerUser(
                 402,
                 "lockedUser",
-                "Password123"
+                "Password123!"
         );
 
         assertFalse(
@@ -89,7 +89,7 @@ public class LoginTest {
         assertFalse(
                 authService.login(
                         "lockedUser",
-                        "Password123"
+                        "Password123!"
                 )
         );
     }

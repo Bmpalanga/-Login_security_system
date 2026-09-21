@@ -9,13 +9,19 @@ public class AuthService {
     private final PasswordService passwordService;
     private final UserRepository userRepository;
     private final SecurityLogRepository securityLogRepository;
+    private final PasswordValidator passwordValidator;
 
     public AuthService() {
         this.passwordService = new PasswordService();
         this.userRepository = new UserRepository();
         this.securityLogRepository = new SecurityLogRepository();
+        this.passwordValidator= new PasswordValidator();
     }
-    public User registerUser(int id, String username, String password) {
+    public User registerUser(
+            int id,
+            String username,
+            String password
+    ) {
 
         if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException(
@@ -23,14 +29,17 @@ public class AuthService {
             );
         }
 
+        if (!passwordValidator.isStrong(password)) {
+            throw new IllegalArgumentException(
+                    "Password does not meet security requirements."
+            );
+        }
+
         String passwordHash =
                 passwordService.hashPassword(password);
 
-        User user = new User(
-                id,
-                username,
-                passwordHash
-        );
+        User user =
+                new User(id, username, passwordHash);
 
         userRepository.save(user);
 

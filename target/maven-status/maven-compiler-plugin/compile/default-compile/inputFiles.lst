@@ -6,3 +6,4 @@
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/repository/UserRepository.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/service/AuthService.java
 /home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/service/PasswordService.java
+/home/wtc05/Electives/-Login_security_system/src/main/java/com/cybersecurity/service/PasswordValidator.java
