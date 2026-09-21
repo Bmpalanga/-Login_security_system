@@ -1,6 +1,7 @@
 package com.cybersecurity;
 
 import com.cybersecurity.database.DatabaseInitializer;
+import com.cybersecurity.database.DatabaseManager;
 import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,9 +15,16 @@ public class LoginTest {
 
     @BeforeEach
     void setUp() {
+
+        DatabaseManager.setDatabaseUrl(
+                "jdbc:sqlite:login_security_test.db"
+        );
+
         DatabaseInitializer.initializeDatabase();
 
-        UserRepository userRepository = new UserRepository();
+        UserRepository userRepository =
+                new UserRepository();
+
         userRepository.deleteAll();
 
         authService = new AuthService();
