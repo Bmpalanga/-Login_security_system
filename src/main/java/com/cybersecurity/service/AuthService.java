@@ -15,26 +15,66 @@ public class AuthService {
 
     public User registerUser(int id, String username, String password) {
 
-        // Check if username already exists
         if (userRepository.findByUsername(username).isPresent()) {
             throw new IllegalArgumentException(
                     "Username already exists."
             );
         }
 
-        // Hash password
-        String passwordHash = passwordService.hashPassword(password);
+        String passwordHash =
+                passwordService.hashPassword(password);
 
-        // Create user
         User user = new User(
                 id,
                 username,
                 passwordHash
         );
 
-        // Save user
         userRepository.save(user);
 
         return user;
+    }
+
+    public boolean login(String username, String password) {
+
+        // Find the user
+        User user = userRepository
+                .findByUsername(username)
+                .orElse(null);
+
+        // User does not exist
+        if (user == null) {
+            return false;
+        }
+
+        // Account is locked
+        if (user.isLocked()) {
+            return false;
+        }
+
+        // Check password
+        boolean correctPassword =
+                passwordService.verifyPassword(
+                        password,
+                        user.getPasswordHash()
+                );
+
+        if (correctPassword) {
+
+            // Successful login
+            user.resetFailedAttempts();
+
+            return true;
+        }
+
+        // Wrong password
+        user.incrementFailedAttempts();
+
+        // Lock after 3 failed attempts
+        if (user.getFailedAttempts() >= 3) {
+            user.lockAccount();
+        }
+
+        return false;
     }
 }

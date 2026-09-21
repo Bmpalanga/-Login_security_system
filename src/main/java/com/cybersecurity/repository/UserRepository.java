@@ -61,7 +61,9 @@ public class UserRepository {
                 User user = new User(
                         resultSet.getInt("id"),
                         resultSet.getString("username"),
-                        resultSet.getString("password_hash")
+                        resultSet.getString("password_hash"),
+                        resultSet.getInt("failed_attempts"),
+                        resultSet.getInt("locked") == 1
                 );
 
                 return Optional.of(user);

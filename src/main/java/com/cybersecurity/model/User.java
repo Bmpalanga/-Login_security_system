@@ -16,6 +16,20 @@ public class User {
         this.locked = false;
     }
 
+    public User(
+            int id,
+            String username,
+            String passwordHash,
+            int failedAttempts,
+            boolean locked
+    ) {
+        this.id = id;
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.failedAttempts = failedAttempts;
+        this.locked = locked;
+    }
+
     public int getId() {
         return id;
     }
