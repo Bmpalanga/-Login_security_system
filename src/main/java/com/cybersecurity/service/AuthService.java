@@ -10,12 +10,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final SecurityLogRepository securityLogRepository;
     private final PasswordValidator passwordValidator;
+    private final LoginRateLimiter loginRateLimiter;
 
     public AuthService() {
         this.passwordService = new PasswordService();
         this.userRepository = new UserRepository();
         this.securityLogRepository = new SecurityLogRepository();
         this.passwordValidator= new PasswordValidator();
+        this.loginRateLimiter = new LoginRateLimiter();
     }
     public User registerUser(
             int id,
@@ -47,10 +49,27 @@ public class AuthService {
     }
 
     public boolean login(String username, String password) {
+        if (!loginRateLimiter.isAllowed(username)) {
+
+            securityLogRepository.saveLog(
+                    username,
+                    "LOGIN_RATE_LIMITED"
+            );
+
+            return false;
+        }
+
+        loginRateLimiter.recordAttempt(username);
 
         User user = userRepository
                 .findByUsername(username)
                 .orElse(null);
+
+
+
+//        User user = userRepository
+//                .findByUsername(username)
+//                .orElse(null);
 
         if (user == null) {
 
