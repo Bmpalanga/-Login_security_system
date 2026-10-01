@@ -20,13 +20,14 @@ public class DatabaseInitializer {
                 """;
 
         String logsSql = """
-                CREATE TABLE IF NOT EXISTS security_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT NOT NULL,
-                    event TEXT NOT NULL,
-                    timestamp TEXT NOT NULL
-                )
-                """;
+        CREATE TABLE IF NOT EXISTS security_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            event TEXT NOT NULL,
+            ip_address TEXT NOT NULL,
+            timestamp TEXT NOT NULL
+        )
+        """;
 
         try (Connection connection = DatabaseManager.getConnection();
              Statement statement = connection.createStatement()) {
@@ -34,11 +35,22 @@ public class DatabaseInitializer {
             statement.execute(usersSql);
             statement.execute(logsSql);
 
+            try {
+                statement.execute("""
+            ALTER TABLE security_logs
+            ADD COLUMN ip_address TEXT NOT NULL
+            DEFAULT 'UNKNOWN'
+            """);
+            } catch (SQLException ignored) {
+                // Column already exists.
+            }
+
             System.out.println("Database initialized successfully.");
 
         } catch (SQLException e) {
             System.out.println("Database initialization failed.");
             e.printStackTrace();
         }
+
     }
 }
