@@ -64,4 +64,26 @@ public class LoginRateLimiterTest {
                 limiter.isAllowed(username)
         );
     }
+    @Test
+    void shouldAllowAttemptsAgainAfterTimeWindow() {
+
+        LoginRateLimiter limiter =
+                new LoginRateLimiter();
+
+        String username = "timeWindowUser";
+
+        for (int i = 0; i < 5; i++) {
+            limiter.recordAttempt(username);
+        }
+
+        assertFalse(
+                limiter.isAllowed(username)
+        );
+
+        limiter.reset(username);
+
+        assertTrue(
+                limiter.isAllowed(username)
+        );
+    }
 }
