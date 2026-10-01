@@ -3,8 +3,8 @@ package com.cybersecurity;
 import com.cybersecurity.database.DatabaseInitializer;
 import com.cybersecurity.service.AuthService;
 
-import java.util.Scanner;
 import java.io.Console;
+import java.util.Scanner;
 
 public class LoginApplication {
 
@@ -12,9 +12,11 @@ public class LoginApplication {
 
         DatabaseInitializer.initializeDatabase();
 
-        AuthService authService = new AuthService();
+        AuthService authService =
+                new AuthService();
 
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner =
+                new Scanner(System.in);
 
         boolean running = true;
 
@@ -30,21 +32,32 @@ public class LoginApplication {
             System.out.println("3. Exit");
             System.out.print("Choose an option: ");
 
-            String choice = scanner.nextLine();
+            String choice =
+                    scanner.nextLine();
 
             switch (choice) {
 
                 case "1":
-                    registerUser(scanner, authService);
+                    registerUser(
+                            scanner,
+                            authService
+                    );
                     break;
 
                 case "2":
-                    loginUser(scanner, authService);
+                    loginUser(
+                            scanner,
+                            authService
+                    );
                     break;
 
                 case "3":
                     running = false;
-                    System.out.println("Goodbye!");
+
+                    System.out.println(
+                            "Goodbye!"
+                    );
+
                     break;
 
                 default:
@@ -66,16 +79,20 @@ public class LoginApplication {
         System.out.println("---------- REGISTER ----------");
 
         System.out.print("Enter username: ");
-        String username = scanner.nextLine();
 
-        String password = readPassword(
-                scanner,
-                "Enter password: "
-        );
+        String username =
+                scanner.nextLine();
+
+        String password =
+                readPassword(
+                        scanner,
+                        "Enter password: "
+                );
 
         System.out.print("Enter user ID: ");
 
-        String idInput = scanner.nextLine();
+        String idInput =
+                scanner.nextLine();
 
         int id;
 
@@ -111,7 +128,6 @@ public class LoginApplication {
                             + e.getMessage()
             );
         }
-
     }
 
     private static void loginUser(
@@ -123,17 +139,35 @@ public class LoginApplication {
         System.out.println("------------ LOGIN ------------");
 
         System.out.print("Enter username: ");
-        String username = scanner.nextLine();
 
-        String password = readPassword(
-                scanner,
-                "Enter password: "
+        String username =
+                scanner.nextLine();
+
+        String password =
+                readPassword(
+                        scanner,
+                        "Enter password: "
+                );
+
+        /*
+         * Ask for the IP address.
+         *
+         * This is temporary for the command-line application.
+         * A future Web API can obtain the IP automatically
+         * from the HTTP request.
+         */
+        System.out.print(
+                "Enter IP address: "
         );
+
+        String ipAddress =
+                scanner.nextLine();
 
         boolean successful =
                 authService.login(
                         username,
-                        password
+                        password,
+                        ipAddress
                 );
 
         if (successful) {
@@ -155,7 +189,8 @@ public class LoginApplication {
             String message
     ) {
 
-        Console console = System.console();
+        Console console =
+                System.console();
 
         if (console != null) {
 
@@ -169,5 +204,5 @@ public class LoginApplication {
 
         return scanner.nextLine();
     }
-
 }
+
