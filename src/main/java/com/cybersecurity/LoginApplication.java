@@ -4,6 +4,7 @@ import com.cybersecurity.database.DatabaseInitializer;
 import com.cybersecurity.service.AuthService;
 
 import java.util.Scanner;
+import java.io.Console;
 
 public class LoginApplication {
 
@@ -67,8 +68,10 @@ public class LoginApplication {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
 
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+        String password = readPassword(
+                scanner,
+                "Enter password: "
+        );
 
         System.out.print("Enter user ID: ");
 
@@ -122,8 +125,10 @@ public class LoginApplication {
         System.out.print("Enter username: ");
         String username = scanner.nextLine();
 
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+        String password = readPassword(
+                scanner,
+                "Enter password: "
+        );
 
         boolean successful =
                 authService.login(
@@ -144,4 +149,25 @@ public class LoginApplication {
             );
         }
     }
+
+    private static String readPassword(
+            Scanner scanner,
+            String message
+    ) {
+
+        Console console = System.console();
+
+        if (console != null) {
+
+            char[] password =
+                    console.readPassword(message);
+
+            return new String(password);
+        }
+
+        System.out.print(message);
+
+        return scanner.nextLine();
+    }
+
 }
