@@ -16,8 +16,8 @@ public class UserRepository {
 
         String sql = """
                 INSERT INTO users
-                (id, username, password_hash, failed_attempts, locked, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (id, username, password_hash, failed_attempts, locked, locked_at, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection connection = DatabaseManager.getConnection();
@@ -28,7 +28,8 @@ public class UserRepository {
             statement.setString(3, user.getPasswordHash());
             statement.setInt(4, user.getFailedAttempts());
             statement.setInt(5, user.isLocked() ? 1 : 0);
-            statement.setString(6, LocalDateTime.now().toString());
+            statement.setString(6, user.getLockedAt());
+            statement.setString(7, LocalDateTime.now().toString());
 
             statement.executeUpdate();
 
@@ -44,7 +45,7 @@ public class UserRepository {
 
         String sql = """
                 SELECT id, username, password_hash,
-                       failed_attempts, locked
+                       failed_attempts, locked, locked_at
                 FROM users
                 WHERE username = ?
                 """;
@@ -63,7 +64,8 @@ public class UserRepository {
                         resultSet.getString("username"),
                         resultSet.getString("password_hash"),
                         resultSet.getInt("failed_attempts"),
-                        resultSet.getInt("locked") == 1
+                        resultSet.getInt("locked") == 1,
+                        resultSet.getString("locked_at")
                 );
 
                 return Optional.of(user);
@@ -76,26 +78,31 @@ public class UserRepository {
 
         return Optional.empty();
     }
+
     public void updateSecurityStatus(User user) {
 
         String sql = """
-            UPDATE users
-            SET failed_attempts = ?,
-                locked = ?
-            WHERE username = ?
-            """;
+                UPDATE users
+                SET failed_attempts = ?,
+                    locked = ?,
+                    locked_at = ?
+                WHERE username = ?
+                """;
 
         try (Connection connection = DatabaseManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, user.getFailedAttempts());
             statement.setInt(2, user.isLocked() ? 1 : 0);
-            statement.setString(3, user.getUsername());
+            statement.setString(3, user.getLockedAt());
+            statement.setString(4, user.getUsername());
 
             statement.executeUpdate();
 
         } catch (SQLException e) {
-            System.out.println("Could not update user security status.");
+            System.out.println(
+                    "Could not update user security status."
+            );
             e.printStackTrace();
         }
     }
@@ -115,3 +122,4 @@ public class UserRepository {
         }
     }
 }
+
