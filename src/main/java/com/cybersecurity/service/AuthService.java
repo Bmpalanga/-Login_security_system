@@ -1,5 +1,5 @@
 
-package com.cybersecurity.service;
+        package com.cybersecurity.service;
 
 import com.cybersecurity.model.User;
 import com.cybersecurity.repository.UserRepository;
@@ -12,6 +12,7 @@ public class AuthService {
     private final SecurityLogRepository securityLogRepository;
     private final PasswordValidator passwordValidator;
     private final LoginRateLimiter loginRateLimiter;
+    private final AccountLockService accountLockService;
 
     public AuthService() {
 
@@ -20,6 +21,7 @@ public class AuthService {
         this.securityLogRepository = new SecurityLogRepository();
         this.passwordValidator = new PasswordValidator();
         this.loginRateLimiter = new LoginRateLimiter();
+        this.accountLockService = new AccountLockService();
     }
 
     public User registerUser(
@@ -53,12 +55,6 @@ public class AuthService {
         return user;
     }
 
-    /*
-     * Existing login method.
-     *
-     * This keeps your current tests and existing application
-     * working. If no IP address is provided, UNKNOWN is used.
-     */
     public boolean login(
             String username,
             String password
@@ -71,19 +67,12 @@ public class AuthService {
         );
     }
 
-    /*
-     * New login method that accepts an IP address.
-     */
     public boolean login(
             String username,
             String password,
             String ipAddress
     ) {
 
-        /*
-         * Check whether the user has exceeded
-         * the login rate limit.
-         */
         if (!loginRateLimiter.isAllowed(username)) {
 
             securityLogRepository.saveLog(
@@ -95,21 +84,12 @@ public class AuthService {
             return false;
         }
 
-        /*
-         * Record this login attempt.
-         */
         loginRateLimiter.recordAttempt(username);
 
-        /*
-         * Find the user in the database.
-         */
         User user = userRepository
                 .findByUsername(username)
                 .orElse(null);
 
-        /*
-         * User does not exist.
-         */
         if (user == null) {
 
             securityLogRepository.saveLog(
@@ -121,42 +101,41 @@ public class AuthService {
             return false;
         }
 
-        /*
-         * Account is already locked.
-         */
         if (user.isLocked()) {
+
+            boolean unlocked =
+                    accountLockService.unlockIfExpired(user);
+
+            if (!unlocked) {
+
+                securityLogRepository.saveLog(
+                        username,
+                        "LOGIN_FAILED_ACCOUNT_LOCKED",
+                        ipAddress
+                );
+
+                return false;
+            }
 
             securityLogRepository.saveLog(
                     username,
-                    "LOGIN_FAILED_ACCOUNT_LOCKED",
+                    "ACCOUNT_AUTO_UNLOCKED",
                     ipAddress
             );
-
-            return false;
         }
 
-        /*
-         * Check the supplied password against
-         * the stored BCrypt password hash.
-         */
         boolean correctPassword =
                 passwordService.verifyPassword(
                         password,
                         user.getPasswordHash()
                 );
 
-        /*
-         * Successful login.
-         */
         if (correctPassword) {
 
             user.resetFailedAttempts();
 
             userRepository.updateSecurityStatus(user);
 
-            /*
-             * Successful login resets the rate limiter.
-             */
             loginRateLimiter.reset(username);
 
             securityLogRepository.saveLog(
@@ -168,15 +147,8 @@ public class AuthService {
             return true;
         }
 
-        /*
-         * Incorrect password.
-         */
         user.incrementFailedAttempts();
 
-        /*
-         * Lock the account after three failed
-         * password attempts.
-         */
         if (user.getFailedAttempts() >= 3) {
 
             user.lockAccount();
@@ -196,10 +168,6 @@ public class AuthService {
             );
         }
 
-        /*
-         * Save the updated failed-attempt count
-         * and locked status.
-         */
         userRepository.updateSecurityStatus(user);
 
         return false;
