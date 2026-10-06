@@ -52,6 +52,7 @@ public class User {
         this.lockedAt = lockedAt;
     }
 
+
     public int getId() {
         return id;
     }
@@ -96,5 +97,14 @@ public class User {
         lockedAt =
                 LocalDateTime.now().format(formatter);
     }
+
+    public void unlockAccount() {
+
+        locked = false;
+        failedAttempts = 0;
+        lockedAt = null;
+    }
+
+
 }
 

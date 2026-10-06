@@ -1,3 +1,4 @@
+
 package com.cybersecurity;
 
 import com.cybersecurity.database.DatabaseInitializer;
@@ -14,9 +15,11 @@ public class AdminApplication {
 
         DatabaseInitializer.initializeDatabase();
 
-        AdminService adminService = new AdminService();
+        AdminService adminService =
+                new AdminService();
 
-        Scanner scanner = new Scanner(System.in);
+        Scanner scanner =
+                new Scanner(System.in);
 
         System.out.println("================================");
         System.out.println("   LOGIN SECURITY ADMIN PANEL");
@@ -24,7 +27,8 @@ public class AdminApplication {
 
         System.out.print("Enter username: ");
 
-        String username = scanner.nextLine();
+        String username =
+                scanner.nextLine();
 
         Optional<User> user =
                 adminService.findUser(username);
@@ -35,6 +39,7 @@ public class AdminApplication {
                     "User not found."
             );
 
+            scanner.close();
             return;
         }
 
@@ -43,16 +48,67 @@ public class AdminApplication {
         System.out.println();
         System.out.println("User Information");
         System.out.println("----------------------------");
+
         System.out.println(
-                "Username: " + foundUser.getUsername()
+                "Username: "
+                        + foundUser.getUsername()
         );
+
         System.out.println(
                 "Failed attempts: "
                         + foundUser.getFailedAttempts()
         );
+
         System.out.println(
-                "Locked: " + foundUser.isLocked()
+                "Locked: "
+                        + foundUser.isLocked()
         );
+
+        if (foundUser.isLocked()) {
+
+            System.out.println(
+                    "Locked at: "
+                            + foundUser.getLockedAt()
+            );
+
+        } else {
+
+            System.out.println(
+                    "Locked at: Not locked"
+            );
+        }
+
+        /*
+         * Allow the administrator to unlock
+         * a locked account.
+         */
+        if (foundUser.isLocked()) {
+
+            System.out.println();
+            System.out.print(
+                    "Unlock this account? (y/n): "
+            );
+
+            String choice =
+                    scanner.nextLine();
+
+            if (choice.equalsIgnoreCase("y")) {
+
+                adminService.unlockUser(
+                        username
+                );
+
+                System.out.println(
+                        "Account unlocked successfully."
+                );
+
+            } else {
+
+                System.out.println(
+                        "Account remains locked."
+                );
+            }
+        }
 
         System.out.println();
         System.out.println("Security Logs");
@@ -77,3 +133,4 @@ public class AdminApplication {
         scanner.close();
     }
 }
+

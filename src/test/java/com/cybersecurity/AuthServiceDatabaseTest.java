@@ -9,6 +9,7 @@ import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.cybersecurity.service.AdminService;
 
 import java.util.List;
 
@@ -154,5 +155,145 @@ public class AuthServiceDatabaseTest {
                 )
         );
     }
+
+    @Test
+    void accountLockShouldRecordLockedAtTimestamp() {
+
+        AuthService authService =
+                new AuthService();
+
+        UserRepository userRepository =
+                new UserRepository();
+
+        authService.registerUser(
+                500,
+                "lockTimeUser",
+                "Password123!"
+        );
+
+        // Three incorrect passwords should lock the account.
+        authService.login(
+                "lockTimeUser",
+                "WrongPassword123!",
+                "192.168.1.20"
+        );
+
+        authService.login(
+                "lockTimeUser",
+                "WrongPassword123!",
+                "192.168.1.20"
+        );
+
+        authService.login(
+                "lockTimeUser",
+                "WrongPassword123!",
+                "192.168.1.20"
+        );
+
+        User lockedUser =
+                userRepository
+                        .findByUsername("lockTimeUser")
+                        .orElseThrow();
+
+        assertTrue(
+                lockedUser.isLocked()
+        );
+
+        assertNotNull(
+                lockedUser.getLockedAt()
+        );
+
+        assertFalse(
+                lockedUser.getLockedAt().isBlank()
+        );
+    }
+
+    @Test
+    void adminShouldBeAbleToUnlockAccount() {
+
+        AuthService authService =
+                new AuthService();
+
+        UserRepository userRepository =
+                new UserRepository();
+
+        AdminService adminService =
+                new AdminService();
+
+        authService.registerUser(
+                600,
+                "unlockTestUser",
+                "Password123!"
+        );
+
+        // Three incorrect passwords lock the account.
+        authService.login(
+                "unlockTestUser",
+                "WrongPassword123!",
+                "192.168.1.30"
+        );
+
+        authService.login(
+                "unlockTestUser",
+                "WrongPassword123!",
+                "192.168.1.30"
+        );
+
+        authService.login(
+                "unlockTestUser",
+                "WrongPassword123!",
+                "192.168.1.30"
+        );
+
+        User lockedUser =
+                userRepository
+                        .findByUsername("unlockTestUser")
+                        .orElseThrow();
+
+        assertTrue(
+                lockedUser.isLocked()
+        );
+
+        assertNotNull(
+                lockedUser.getLockedAt()
+        );
+
+        // Administrator unlocks the account.
+        adminService.unlockUser(
+                "unlockTestUser"
+        );
+
+        User unlockedUser =
+                userRepository
+                        .findByUsername("unlockTestUser")
+                        .orElseThrow();
+
+        assertFalse(
+                unlockedUser.isLocked()
+        );
+
+        assertEquals(
+                0,
+                unlockedUser.getFailedAttempts()
+        );
+
+        assertNull(
+                unlockedUser.getLockedAt()
+        );
+
+        // User should be able to log in again.
+        boolean loginSuccessful =
+                authService.login(
+                        "unlockTestUser",
+                        "Password123!",
+                        "192.168.1.30"
+                );
+
+        assertTrue(loginSuccessful);
+    }
+
+
+
+
 }
 

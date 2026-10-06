@@ -22,6 +22,12 @@ public class AdminService {
         return userRepository.findByUsername(username);
     }
 
+    public void unlockUser(String username) {
+
+        userRepository.unlockUser(username);
+    }
+
+
     public List<String> getSecurityLogs(String username) {
 
         return securityLogRepository.findLogsByUsername(username);
