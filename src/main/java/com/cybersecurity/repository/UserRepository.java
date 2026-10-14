@@ -192,5 +192,41 @@ public class UserRepository {
             e.printStackTrace();
         }
     }
+
+
+    public void updatePassword(
+            String username,
+            String passwordHash
+    ) {
+
+        String sql = """
+            UPDATE users
+            SET password_hash = ?
+            WHERE username = ?
+            """;
+
+        try (Connection connection =
+                     DatabaseManager.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, passwordHash);
+            statement.setString(2, username);
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Could not update password."
+            );
+
+            e.printStackTrace();
+        }
+    }
+
+
+
+
 }
 

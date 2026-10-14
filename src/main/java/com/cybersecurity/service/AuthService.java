@@ -1,9 +1,12 @@
 
-        package com.cybersecurity.service;
+package com.cybersecurity.service;
 
 import com.cybersecurity.model.User;
+import com.cybersecurity.repository.PasswordHistoryRepository;
 import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.repository.SecurityLogRepository;
+import com.cybersecurity.repository.PasswordHistoryRepository;
+
 
 public class AuthService {
 
@@ -13,6 +16,7 @@ public class AuthService {
     private final PasswordValidator passwordValidator;
     private final LoginRateLimiter loginRateLimiter;
     private final AccountLockService accountLockService;
+    private final PasswordHistoryRepository passwordHistoryRepository;
 
     public AuthService() {
 
@@ -22,6 +26,7 @@ public class AuthService {
         this.passwordValidator = new PasswordValidator();
         this.loginRateLimiter = new LoginRateLimiter();
         this.accountLockService = new AccountLockService();
+        this.passwordHistoryRepository = new PasswordHistoryRepository();
     }
 
     public User registerUser(
@@ -29,6 +34,7 @@ public class AuthService {
             String username,
             String password
     ) {
+
 
         if (userRepository.findByUsername(username).isPresent()) {
 
@@ -50,9 +56,17 @@ public class AuthService {
         User user =
                 new User(id, username, passwordHash);
 
+
         userRepository.save(user);
 
+        passwordHistoryRepository.savePassword(
+                username,
+                passwordHash
+        );
+
         return user;
+
+
     }
 
     public boolean login(
@@ -172,5 +186,54 @@ public class AuthService {
 
         return false;
     }
-}
 
+
+    public void changePassword(
+            String username,
+            String newPassword
+    ) {
+
+        User user = userRepository
+                .findByUsername(username)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "User not found."
+                        )
+                );
+
+        if (!passwordValidator.isStrong(newPassword)) {
+
+            throw new IllegalArgumentException(
+                    "Password does not meet security requirements."
+            );
+        }
+
+        if (passwordHistoryRepository.hasUsedPassword(
+                username,
+                newPassword
+        )) {
+
+            throw new IllegalArgumentException(
+                    "Password has already been used."
+            );
+        }
+
+        String newPasswordHash =
+                passwordService.hashPassword(newPassword);
+
+        userRepository.updatePassword(
+                username,
+                newPasswordHash
+        );
+
+        passwordHistoryRepository.savePassword(
+                username,
+                newPasswordHash
+        );
+        securityLogRepository.saveLog(
+                username,
+                "PASSWORD_CHANGED"
+        );
+    }
+
+}

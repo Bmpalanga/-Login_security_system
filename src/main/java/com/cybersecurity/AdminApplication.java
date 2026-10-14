@@ -111,6 +111,37 @@ public class AdminApplication {
         }
 
         System.out.println();
+        System.out.println("Security Summary");
+        System.out.println("----------------------------");
+
+        System.out.println(
+                "Successful logins: "
+                        + adminService.countSuccessfulLogins(username)
+        );
+
+        System.out.println(
+                "Failed logins: "
+                        + adminService.countFailedLogins(username)
+        );
+
+        System.out.println(
+                "Account locks: "
+                        + adminService.countAccountLocks(username)
+        );
+
+        System.out.println(
+                "Automatic unlocks: "
+                        + adminService.countAutomaticUnlocks(username)
+        );
+
+        System.out.println(
+                "Rate-limited attempts: "
+                        + adminService.countRateLimitedAttempts(username)
+        );
+
+
+
+        System.out.println();
         System.out.println("Security Logs");
         System.out.println("----------------------------");
 

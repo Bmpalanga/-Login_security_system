@@ -4,6 +4,7 @@ package com.cybersecurity;
 import com.cybersecurity.database.DatabaseInitializer;
 import com.cybersecurity.database.DatabaseManager;
 import com.cybersecurity.model.User;
+import com.cybersecurity.repository.PasswordHistoryRepository;
 import com.cybersecurity.repository.SecurityLogRepository;
 import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.service.AuthService;
@@ -534,10 +535,74 @@ public class AuthServiceDatabaseTest {
         );
     }
 
+    @Test
+    void shouldStoreInitialPasswordInHistory() {
 
+        AuthService authService = new AuthService();
 
+        authService.registerUser(
+                500,
+                "historyUser",
+                "StrongPassword1!"
+        );
 
+        PasswordHistoryRepository repository =
+                new PasswordHistoryRepository();
 
+        assertTrue(
+                repository.hasUsedPassword(
+                        "historyUser",
+                        "StrongPassword1!"
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectPreviouslyUsedPasswordWhenChangingPassword() {
+
+        AuthService authService = new AuthService();
+
+        authService.registerUser(
+                600,
+                "passwordChangeUser",
+                "StrongPassword1!"
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        "passwordChangeUser",
+                        "StrongPassword1!"
+                )
+        );
+    }
+
+    @Test
+    void shouldLogSuccessfulPasswordChange() {
+
+        AuthService authService = new AuthService();
+        SecurityLogRepository securityLogRepository =
+                new SecurityLogRepository();
+
+        authService.registerUser(
+                700,
+                "passwordLogUser",
+                "StrongPassword1!"
+        );
+
+        authService.changePassword(
+                "passwordLogUser",
+                "NewStrongPassword2@"
+        );
+
+        assertTrue(
+                securityLogRepository
+                        .findLogsByUsername("passwordLogUser")
+                        .stream()
+                        .anyMatch(log ->
+                                log.contains("PASSWORD_CHANGED"))
+        );
+    }
 
 
 
@@ -545,4 +610,20 @@ public class AuthServiceDatabaseTest {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
