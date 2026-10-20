@@ -11,11 +11,12 @@ import com.cybersecurity.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.cybersecurity.service.AdminService;
-import com.cybersecurity.service.AuthService;
 import com.cybersecurity.service.AccountLockService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 
 import java.util.List;
@@ -23,25 +24,34 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AuthServiceDatabaseTest {
-
     @BeforeEach
     void setUp() {
 
+        // Use a separate database for testing.
         DatabaseManager.setDatabaseUrl(
                 "jdbc:sqlite:login_security_test.db"
         );
 
+
         DatabaseInitializer.initializeDatabase();
 
+        // Clear users from previous tests.
         UserRepository userRepository =
                 new UserRepository();
 
         userRepository.deleteAll();
 
+
         SecurityLogRepository securityLogRepository =
                 new SecurityLogRepository();
 
         securityLogRepository.deleteAll();
+
+
+        PasswordHistoryRepository passwordHistoryRepository =
+                new PasswordHistoryRepository();
+
+        passwordHistoryRepository.deleteAll();
     }
 
     @Test
@@ -437,6 +447,7 @@ public class AuthServiceDatabaseTest {
                 unlockedUser.getLockedAt()
         );
     }
+
     @Test
     void userShouldBeAbleToLoginAfterAutomaticUnlock() {
 
@@ -577,27 +588,33 @@ public class AuthServiceDatabaseTest {
         );
     }
 
+
     @Test
     void shouldLogSuccessfulPasswordChange() {
 
         AuthService authService = new AuthService();
+
         SecurityLogRepository securityLogRepository =
                 new SecurityLogRepository();
 
+        String username = "passwordLogUser701";
+        String originalPassword = "OriginalPassword701!";
+        String newPassword = "ChangedPassword701!";
+
         authService.registerUser(
-                700,
-                "passwordLogUser",
-                "StrongPassword1!"
+                701,
+                username,
+                originalPassword
         );
 
         authService.changePassword(
-                "passwordLogUser",
-                "NewStrongPassword2@"
+                username,
+                newPassword
         );
 
         assertTrue(
                 securityLogRepository
-                        .findLogsByUsername("passwordLogUser")
+                        .findLogsByUsername(username)
                         .stream()
                         .anyMatch(log ->
                                 log.contains("PASSWORD_CHANGED"))
@@ -605,9 +622,42 @@ public class AuthServiceDatabaseTest {
     }
 
 
+    @Test
+    void shouldAllowLoginWithNewPasswordAfterPasswordChange() {
 
+        AuthService authService = new AuthService();
 
+        String username = "passwordLoginChangeUser701";
+        String oldPassword = "StrongPassword1!";
+        String newPassword = "NewStrongPassword2@";
 
+        authService.registerUser(
+                701,
+                username,
+                oldPassword
+        );
+
+        authService.changePassword(
+                username,
+                newPassword
+        );
+
+        assertTrue(
+                authService.login(
+                        username,
+                        newPassword
+                ),
+                "Login should succeed with the new password"
+        );
+
+        assertFalse(
+                authService.login(
+                        username,
+                        oldPassword
+                ),
+                "Login should fail with the old password"
+        );
+    }
 
 }
 
