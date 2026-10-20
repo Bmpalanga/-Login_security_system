@@ -1,12 +1,9 @@
-
 package com.cybersecurity.service;
 
 import com.cybersecurity.model.User;
 import com.cybersecurity.repository.PasswordHistoryRepository;
 import com.cybersecurity.repository.UserRepository;
 import com.cybersecurity.repository.SecurityLogRepository;
-import com.cybersecurity.repository.PasswordHistoryRepository;
-
 
 public class AuthService {
 
@@ -35,7 +32,6 @@ public class AuthService {
             String password
     ) {
 
-
         if (userRepository.findByUsername(username).isPresent()) {
 
             throw new IllegalArgumentException(
@@ -56,7 +52,6 @@ public class AuthService {
         User user =
                 new User(id, username, passwordHash);
 
-
         userRepository.save(user);
 
         passwordHistoryRepository.savePassword(
@@ -65,8 +60,6 @@ public class AuthService {
         );
 
         return user;
-
-
     }
 
     public boolean login(
@@ -187,7 +180,6 @@ public class AuthService {
         return false;
     }
 
-
     public void changePassword(
             String username,
             String newPassword
@@ -201,6 +193,7 @@ public class AuthService {
                         )
                 );
 
+        // Validate the new password.
         if (!passwordValidator.isStrong(newPassword)) {
 
             throw new IllegalArgumentException(
@@ -208,6 +201,7 @@ public class AuthService {
             );
         }
 
+        // Prevent reuse of previous passwords.
         if (passwordHistoryRepository.hasUsedPassword(
                 username,
                 newPassword
@@ -218,22 +212,34 @@ public class AuthService {
             );
         }
 
+        // Hash the new password.
         String newPasswordHash =
                 passwordService.hashPassword(newPassword);
 
+        // Update the password in the database.
         userRepository.updatePassword(
                 username,
                 newPasswordHash
         );
 
+        // Reset failed attempts without unlocking the account.
+        user.resetFailedAttempts();
+
+        userRepository.updateSecurityStatus(user);
+
+        // Save the new password in password history.
         passwordHistoryRepository.savePassword(
                 username,
                 newPasswordHash
         );
+
+        // Record the successful password change.
         securityLogRepository.saveLog(
                 username,
                 "PASSWORD_CHANGED"
         );
-    }
 
+        // Reset the login rate limiter for this username.
+        loginRateLimiter.reset(username);
+    }
 }

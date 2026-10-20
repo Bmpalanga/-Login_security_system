@@ -658,8 +658,77 @@ public class AuthServiceDatabaseTest {
                 "Login should fail with the old password"
         );
     }
+        @Test
+        void shouldResetFailedAttemptsAfterPasswordChange(){
 
-}
+            AuthService authService = new AuthService();
+
+            UserRepository userRepository = new UserRepository();
+
+            String username = "resetAttemptsUser801";
+            String oldPassword = "OriginalPassword801!";
+            String newPassword = "NewPassword801@";
+
+            // Register the user.
+            authService.registerUser(
+                    801,
+                    username,
+                    oldPassword
+            );
+
+            // Record one failed login attempt.
+            assertFalse(
+                    authService.login(
+                            username,
+                            "WrongPassword801!"
+                    )
+            );
+
+            // Confirm that the failed attempt was recorded.
+            User userBeforeChange = userRepository
+                    .findByUsername(username)
+                    .orElseThrow();
+
+            assertEquals(
+                    1,
+                    userBeforeChange.getFailedAttempts()
+            );
+
+            // Change the password.
+            authService.changePassword(
+                    username,
+                    newPassword
+            );
+
+            // Confirm that failed attempts have been reset.
+            User userAfterChange = userRepository
+                    .findByUsername(username)
+                    .orElseThrow();
+
+            assertEquals(
+                    0,
+                    userAfterChange.getFailedAttempts()
+            );
+
+            // Confirm that the new password works.
+            assertTrue(
+                    authService.login(
+                            username,
+                            newPassword
+                    )
+            );
+
+
+            assertFalse(
+                    authService.login(
+                            username,
+                            oldPassword
+                    )
+            );
+        }
+    }
+
+
 
 
 
