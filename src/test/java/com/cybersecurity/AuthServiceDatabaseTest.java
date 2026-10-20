@@ -587,6 +587,53 @@ public class AuthServiceDatabaseTest {
                 )
         );
     }
+    @Test
+    void shouldPreventReuseOfOlderPasswordsAfterMultipleChanges() {
+
+        AuthService authService = new AuthService();
+
+        String username = "passwordHistoryUser802";
+        String originalPassword = "OriginalPassword802!";
+        String secondPassword = "SecondPassword802@";
+        String thirdPassword = "ThirdPassword802#";
+
+        // Register the user with the original password.
+        authService.registerUser(
+                802,
+                username,
+                originalPassword
+        );
+
+        // Change to the second password.
+        authService.changePassword(
+                username,
+                secondPassword
+        );
+
+        // Change to the third password.
+        authService.changePassword(
+                username,
+                thirdPassword
+        );
+
+        // The original password must not be reusable.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        originalPassword
+                )
+        );
+
+        // The second password must not be reusable either.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        secondPassword
+                )
+        );
+    }
 
 
     @Test
@@ -726,6 +773,51 @@ public class AuthServiceDatabaseTest {
                     )
             );
         }
+    @Test
+    void shouldKeepCurrentPasswordAfterRejectedPasswordChange() {
+
+        AuthService authService = new AuthService();
+
+        String username = "rejectedChangeUser803";
+        String originalPassword = "OriginalPassword803!";
+        String newPassword = "NewPassword803@";
+
+        authService.registerUser(
+                803,
+                username,
+                originalPassword
+        );
+
+        authService.changePassword(
+                username,
+                newPassword
+        );
+
+        // Attempt to reuse the original password.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        originalPassword
+                )
+        );
+
+        // The current password should still work.
+        assertTrue(
+                authService.login(
+                        username,
+                        newPassword
+                )
+        );
+
+        // The rejected password must not work.
+        assertFalse(
+                authService.login(
+                        username,
+                        originalPassword
+                )
+        );
+    }
     }
 
 
