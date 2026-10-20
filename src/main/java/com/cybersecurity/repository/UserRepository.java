@@ -224,6 +224,32 @@ public class UserRepository {
             e.printStackTrace();
         }
     }
+    public void resetFailedAttempts(String username) {
+
+        String sql = """
+            UPDATE users
+            SET failed_attempts = 0
+            WHERE username = ?
+            """;
+
+        try (Connection connection =
+                     DatabaseManager.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(1, username);
+
+            statement.executeUpdate();
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Could not reset failed login attempts."
+            );
+
+            e.printStackTrace();
+        }
+    }
 
 
 
