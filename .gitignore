@@ -8,3 +8,5 @@ target/
 # Test database
 login_security_test.db
 
+# Main database
+login_security.db

@@ -182,9 +182,11 @@ public class AuthService {
 
     public void changePassword(
             String username,
+            String currentPassword,
             String newPassword
     ) {
 
+        // Find the user.
         User user = userRepository
                 .findByUsername(username)
                 .orElseThrow(() ->
@@ -192,6 +194,24 @@ public class AuthService {
                                 "User not found."
                         )
                 );
+
+        // Verify the current password.
+        // Verify the current password.
+        if (!passwordService.verifyPassword(
+                currentPassword,
+                user.getPasswordHash()
+        )) {
+
+            // Record the failed password-change attempt.
+            securityLogRepository.saveLog(
+                    username,
+                    "PASSWORD_CHANGE_FAILED"
+            );
+
+            throw new IllegalArgumentException(
+                    "Current password is incorrect."
+            );
+        }
 
         // Validate the new password.
         if (!passwordValidator.isStrong(newPassword)) {

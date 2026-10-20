@@ -54,4 +54,29 @@ public class SecurityLogRepositoryTest {
                 logs.get(0).contains("LOGIN_SUCCESS")
         );
     }
+    @Test
+    void shouldSaveAndRetrieveIpAddress() {
+
+        securityLogRepository.saveLog(
+                "ipTestUser",
+                "LOGIN_SUCCESS",
+                "192.168.1.10"
+        );
+
+        List<String> logs =
+                securityLogRepository.findLogsByUsername(
+                        "ipTestUser"
+                );
+
+        assertEquals(1, logs.size());
+
+        assertTrue(
+                logs.get(0).contains("LOGIN_SUCCESS")
+        );
+
+        assertTrue(
+                logs.get(0).contains("192.168.1.10"),
+                "The security log should contain the IP address."
+        );
+    }
 }

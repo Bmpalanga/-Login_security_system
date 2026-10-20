@@ -583,6 +583,7 @@ public class AuthServiceDatabaseTest {
                 IllegalArgumentException.class,
                 () -> authService.changePassword(
                         "passwordChangeUser",
+                        "StrongPassword1!",
                         "StrongPassword1!"
                 )
         );
@@ -607,12 +608,14 @@ public class AuthServiceDatabaseTest {
         // Change to the second password.
         authService.changePassword(
                 username,
+                originalPassword,
                 secondPassword
         );
 
         // Change to the third password.
         authService.changePassword(
                 username,
+                secondPassword,
                 thirdPassword
         );
 
@@ -621,6 +624,7 @@ public class AuthServiceDatabaseTest {
                 IllegalArgumentException.class,
                 () -> authService.changePassword(
                         username,
+                        thirdPassword,
                         originalPassword
                 )
         );
@@ -630,6 +634,7 @@ public class AuthServiceDatabaseTest {
                 IllegalArgumentException.class,
                 () -> authService.changePassword(
                         username,
+                        thirdPassword,
                         secondPassword
                 )
         );
@@ -656,6 +661,7 @@ public class AuthServiceDatabaseTest {
 
         authService.changePassword(
                 username,
+                originalPassword,
                 newPassword
         );
 
@@ -686,9 +692,9 @@ public class AuthServiceDatabaseTest {
 
         authService.changePassword(
                 username,
+                oldPassword,
                 newPassword
         );
-
         assertTrue(
                 authService.login(
                         username,
@@ -744,9 +750,9 @@ public class AuthServiceDatabaseTest {
             // Change the password.
             authService.changePassword(
                     username,
+                    oldPassword,
                     newPassword
             );
-
             // Confirm that failed attempts have been reset.
             User userAfterChange = userRepository
                     .findByUsername(username)
@@ -790,14 +796,15 @@ public class AuthServiceDatabaseTest {
 
         authService.changePassword(
                 username,
+                originalPassword,
                 newPassword
         );
-
         // Attempt to reuse the original password.
         assertThrows(
                 IllegalArgumentException.class,
                 () -> authService.changePassword(
                         username,
+                        newPassword,
                         originalPassword
                 )
         );
@@ -818,6 +825,261 @@ public class AuthServiceDatabaseTest {
                 )
         );
     }
+    @Test
+    void shouldNotLogRejectedPasswordChangeAsSuccessful() {
+
+        AuthService authService = new AuthService();
+        SecurityLogRepository securityLogRepository =
+                new SecurityLogRepository();
+
+        String username = "rejectedLogUser804";
+        String originalPassword = "OriginalPassword804!";
+        String newPassword = "NewPassword804@";
+
+        // Register the user.
+        authService.registerUser(
+                804,
+                username,
+                originalPassword
+        );
+
+        // Change the password successfully.
+        authService.changePassword(
+                username,
+                originalPassword,
+                newPassword
+        );
+
+        // Attempt to reuse the original password.
+        assertThrows(
+                IllegalArgumentException.class,() -> authService.changePassword(
+                        username,
+                        newPassword,
+                        originalPassword
+                )
+        );
+
+        // Only the successful change should be logged.
+        long passwordChangeEvents =
+                securityLogRepository
+                        .findLogsByUsername(username)
+                        .stream()
+                        .filter(log -> log.contains("PASSWORD_CHANGED"))
+                        .count();
+
+        assertEquals(1, passwordChangeEvents);
+    }
+    @Test
+    void shouldRejectPasswordChangeForNonexistentUser() {
+
+        AuthService authService = new AuthService();
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        "nonexistentUser805",
+                        "CurrentPassword805!",
+                        "NewPassword805@"
+                )
+        );
+    }
+    @Test
+    void shouldRejectWeakPasswordAndKeepCurrentPassword() {
+
+        AuthService authService = new AuthService();
+
+        String username = "weakPasswordUser806";
+        String originalPassword = "OriginalPassword806!";
+
+        // Register the user.
+        authService.registerUser(
+                806,
+                username,
+                originalPassword
+        );
+
+        // Attempt to change to a weak password.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        originalPassword,
+                        "weak"
+                )
+        );
+
+        // The original password should still work.
+        assertTrue(
+                authService.login(
+                        username,
+                        originalPassword
+                )
+        );
+
+        // The weak password should not work.
+        assertFalse(
+                authService.login(
+                        username,
+                        "weak"
+                )
+        );
+    }
+    @Test
+    void shouldRejectPasswordChangeWithIncorrectCurrentPassword() {
+
+        AuthService authService = new AuthService();
+
+        String username = "incorrectCurrentPasswordUser807";
+        String originalPassword = "OriginalPassword807!";
+        String newPassword = "NewPassword807@";
+        String incorrectPassword = "WrongPassword807!";
+
+        // Register the user.
+        authService.registerUser(
+                807,
+                username,
+                originalPassword
+        );
+
+        // Attempt to change the password using an incorrect current password.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        incorrectPassword,
+                        newPassword
+                )
+        );
+
+        // The original password must still work.
+        assertTrue(
+                authService.login(
+                        username,
+                        originalPassword
+                ),
+                "The original password should still work."
+        );
+
+        // The new password must not work.
+        assertFalse(
+                authService.login(
+                        username,
+                        newPassword
+                ),
+                "The new password should not work."
+        );
+    }
+    @Test
+    void shouldNotLogSuccessfulPasswordChangeWhenCurrentPasswordIsIncorrect() {
+
+        AuthService authService = new AuthService();
+
+        SecurityLogRepository securityLogRepository =
+                new SecurityLogRepository();
+
+        String username = "incorrectPasswordLogUser808";
+        String originalPassword = "OriginalPassword808!";
+        String newPassword = "NewPassword808@";
+        String incorrectPassword = "WrongPassword808!";
+
+        // Register the user.
+        authService.registerUser(
+                808,
+                username,
+                originalPassword
+        );
+
+        // Attempt a password change with the wrong current password.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        incorrectPassword,
+                        newPassword
+                )
+        );
+
+        // Confirm that no successful password change was logged.
+        long passwordChangeEvents =
+                securityLogRepository
+                        .findLogsByUsername(username)
+                        .stream()
+                        .filter(log -> log.contains("PASSWORD_CHANGED"))
+                        .count();
+
+        assertEquals(
+                0,
+                passwordChangeEvents,
+                "A rejected password change must not be logged as successful."
+        );
+
+        // Confirm that the original password still works.
+        assertTrue(
+                authService.login(
+                        username,
+                        originalPassword
+                )
+        );
+
+        // Confirm that the proposed new password does not work.
+        assertFalse(
+                authService.login(
+                        username,
+                        newPassword
+                )
+        );
+    }
+    @Test
+    void shouldLogFailedPasswordChangeWhenCurrentPasswordIsIncorrect() {
+
+        AuthService authService = new AuthService();
+
+        SecurityLogRepository securityLogRepository =
+                new SecurityLogRepository();
+
+        String username = "failedPasswordChangeUser809";
+        String originalPassword = "OriginalPassword809!";
+        String newPassword = "NewPassword809@";
+        String incorrectPassword = "WrongPassword809!";
+
+        // Register the user.
+        authService.registerUser(
+                809,
+                username,
+                originalPassword
+        );
+
+        // Attempt to change the password with an incorrect current password.
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authService.changePassword(
+                        username,
+                        incorrectPassword,
+                        newPassword
+                )
+        );
+
+        // Confirm that the failed password change was logged.
+        assertTrue(
+                securityLogRepository
+                        .findLogsByUsername(username)
+                        .stream()
+                        .anyMatch(log ->
+                                log.contains("PASSWORD_CHANGE_FAILED")),
+                "The failed password change should be recorded."
+        );
+
+        // Confirm that no successful password change was logged.
+        assertFalse(
+                securityLogRepository
+                        .findLogsByUsername(username)
+                        .stream()
+                        .anyMatch(log ->
+                                log.contains("PASSWORD_CHANGED")),
+                "A rejected password change must not be logged as successful."
+        );
+    }
+
     }
 
 
